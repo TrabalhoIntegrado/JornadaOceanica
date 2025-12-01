@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<!-- A classe 'dark' será ligada/desligada aqui -->
+<html html lang="pt-BR" style="scroll-behavior: smooth;" class="snap-y snap-mandatory">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Jornada Oceânica</title>
+
+    <!-- Tailwind (CDN rápido) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte "Fredoka" (mais cartunizada) -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Script para carregar o Tema Escuro antes da página -->
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <style>
+        /* Aplicando a nova fonte */
+        body {
+            font-family: 'Fredoka', sans-serif;
+            overflow-x: hidden;
+            max-width: 100vw;
+            /* evita elementos fora da viewport */
+            position: relative;
+        }
+
+        img {
+            width: 100%;
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- CSS DO POPOVER (INTOCADO) --- */
+        .popover {
+            position: absolute;
+            z-index: 600 !important;
+            width: 280px;
+            background: #fff;
+            color: #222;
+            border-radius: 8px;
+            padding: 0.9rem;
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.12);
+            bottom: 125%;
+            left: 50%;
+            opacity: 0;
+            visibility: hidden;
+            transform-origin: bottom center;
+            transform: translateX(-50%) translateY(6px) scale(0.98);
+            transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+        }
+
+        .popover.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+
+        .popover::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
+        }
+
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.96);
+            color: #0d47a1;
+            box-shadow: 0 6px 16px rgba(2, 6, 23, 0.08);
+            cursor: pointer;
+            border: 1px solid rgba(13, 71, 161, 0.06);
+        }
+
+        .info-icon:focus {
+            outline: 3px solid rgba(13, 71, 161, 0.14);
+            outline-offset: 2px;
+        }
+
+        .info-icon--small {
+            width: 28px;
+            height: 28px;
+            font-size: 13px;
+        }
+
+        /* --- FIM DO CSS DO POPOVER --- */
+
+        /* Novo estilo "Cartoon" para os placeholders */
+        .cartoon-placeholder {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-radius: 1.5rem;
+            /* Mais arredondado */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .cartoon-placeholder {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-trigger-large {
+            /* Você pode estilizar isso como quiser */
+            background-color: rgb(37, 99, 235);
+            /* Um vermelho escuro (use cores do Tailwind se preferir) */
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border: none;
+            transition: all 0.2s ease-in-out;
+            z-index: 100;
+        }
+
+        .modal-trigger-large:hover {
+            background-color: rgb(167, 102, 50);
+            /* Vermelho mais claro */
+            transform: scale(1.05);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            /* Começa 100% escondido e sem ocupar espaço */
+            opacity: 0;
+            z-index: 1000;
+            /* Fica acima de tudo (quando ativo) */
+            transition: opacity 0.3s ease;
+        }
+
+        /* 3. Classe 'active' que o JS vai adicionar [CORRIGIDO] */
+        .modal-overlay.active {
+            display: flex;
+            /* <-- SÓ FICA FLEX QUANDO ESTÁ ATIVO */
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+        }
+
+        /* 4. A caixa de conteúdo do modal (Sem mudanças) */
+        .modal-content {
+            background: rgb(167, 102, 50);
+            padding: 24px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        /* 5. O botão de fechar "X" (Sem mudanças) */
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            font-weight: bold;
+            color: #888;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        #sidebar-menu {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #sidebar-toggle {
+            /* Adiciona transição para o movimento do botão */
+            transition: transform 0.3s ease-in-out, background-color 0.2s;
+        }
+
+        #sidebar-arrow {
+            /* Adiciona transição para a rotação da seta */
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* responsivo: evita overflow em telas muito pequenas */
+        @media (max-width:420px) {
+            .popover {
+                width: 220px;
+                left: 50%;
+                transform: translateX(-50%) translateY(6px) scale(.98);
+            }
+        }
+    </style>
+
+    <!-- Adicionando o estilo das imagens no fundo -->
+    <link rel="stylesheet" href="./estiloEstrutura.css">
+
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 antialiased">
+
+    <!-- NAV -->
+    
+
+    <!-- O MENU LATERAL (SIDEBAR) -->
+    <aside id="sidebar-menu"
+        class="fixed top-0 left-0 z-40 h-screen w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-lg transform -translate-x-full">
+
+        <!-- Cabeçalho do Menu -->
+        <div class="p-5 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-2xl font-bold text-blue-800 dark:text-blue-300">Menu</h3>
+            <div class="logo-container">
+                <img src="./imagens/logo.png" alt="Logo Jornada Oceânica" class="logo-image">
+            </div>
+        </div>
+
+        <!-- Links do Menu -->
+        <nav class="p-5">
+            <ul class="space-y-4">
+                <li><a href="#superficie"
+                        class="sidebar-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white font-medium transition-colors duration-200 text-lg">Superfície</a>
+                </li>
+                <li><a href="#ilha-de-plastico"
+                        class="sidebar-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white font-medium transition-colors duration-200 text-lg">Ilha
+                        de Lixo</a></li>
+                <li><a href="#descida-lixo"
+                        class="sidebar-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white font-medium transition-colors duration-200 text-lg">Primeira decida</a>
+                </li>
+                <li><a href="#recifes"
+                        class="sidebar-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white font-medium transition-colors duration-200 text-lg">Recifes</a>
+                </li>
+                <li><a href="#zona-crepuscular"
+                        class="sidebar-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white font-medium transition-colors duration-200 text-lg">Zona crepuscular</a>
+                </li>
+                <li><a href="#abismo"
+                        class="sidebar-link text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-white font-medium transition-colors duration-200 text-lg">O fundo</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Botão de Tema Escuro (dentro da sidebar) -->
+        <div classs="absolute bottom-5 left-5 p-5">
+            <button id="theme-toggle-sidebar" type="button"
+                class="text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-sm p-2.5">
+                <svg id="theme-toggle-dark-icon-sidebar" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+                <svg id="theme-toggle-light-icon-sidebar" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-1.636 4.95l1.414 1.414a1 1 0 01-1.414 1.414l-1.414-1.414a1 1 0 011.414-1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1zM5.05 16.364a1 1 0 10-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM5.05 3.636a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414z"
+                        fill-rule="evenodd" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+    </aside>
+
+    <!-- "ABA" DA SIDEBAR (BOTÃO DE SETA) -->
+    <button id="sidebar-toggle" type="button"
+        class="fixed top-1/2 left-0 z-50 transform -translate-y-1/2 flex items-center justify-center w-10 h-24 rounded-l-none rounded-r-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-md  text-blue-800 dark:text-blue-300 shadow-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+        <span class="sr-only">Abrir/Fechar menu</span>
+        <svg id="sidebar-arrow" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"></path>
+        </svg>
+    </button>
+
+    <main>
+
+        <!-- INTRODUÇÃO-->
+        <section id="introducao"
+            class="min-h-screen flex flex-col justify-center items-center p-8 bg-blue-100 dark:bg-gray-900 text-center relative snap-center">
+
+            <div class="z-10">
+                <!-- Título Principal -->
+                <h1 class="text-6xl md:text-8xl font-bold mb-6 text-blue-800 dark:text-blue-300"
+                    style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
+                    Jornada Oceânica
+                </h1>
+
+                <!-- Texto Descritivo -->
+                <p class="text-xl md:text-2xl mb-12 text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                    Nossos oceanos estão em perigo, mas a história completa está escondida sob as ondas.
+                    Esta é uma viagem da superfície ao abismo que revela o impacto real da nossa poluição.
+                </p>
+
+                <a href="#superficie"
+                    class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold py-4 px-10 rounded-full text-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                    Iniciar o Mergulho
+                </a>
+            </div>
+                <!--PEIXES E ANIMAÇÕES-->
+            <div class="peixe">
+                <div class="peixe-tamanho-75"> <img src="/imagens/peixe.png"></div>
+                <div class="peixe-tamanho-75"><img src="/imagens/peixe2.png"></div>
+                <div class="peixe-tamanho-75"> <img src="/imagens/peixe.png"></div>
+                <div class="peixe-tamanho-75"><img src="/imagens/peixe2.png"></div>
+                <div class="peixe-tamanho-75"> <img src="/imagens/peixe.png"></div>
+                <div class="peixe-tamanho-75"><img src="/imagens/peixe2.png"></div>
+                <div class="peixe-tamanho-75"> <img src="/imagens/peixe.png"></div>
+                <div class="peixe-tamanho-75"><img src="/imagens/peixe2.png"></div>
+            </div>
+
+            <div class="peixe peixe1">
+                <div class="peixe-tamanho-75"> <img src="/imagens/peixe.png"></div>
+                <div class="peixe-tamanho-75"><img src="/imagens/peixe2.png"></div>
+                <div class="peixe-tamanho-75"> <img src="/imagens/peixe.png"></div>
+                <div class="peixe-tamanho-75"><img src="/imagens/peixe2.png"></div>
+                <div class="peixe-tamanho-75"> <img src="/imagens/peixe.png"></div>
+                <div class="peixe-tamanho-75"><img src="/imagens/peixe2.png"></div>
+                <div class="peixe-tamanho-75"> <img src="/imagens/peixe.png"></div>
+                <div class="peixe-tamanho-75"><img src="/imagens/peixe2.png"></div>
+            </div>
+
+            <!-- Seta animada para incentivar a rolagem -->
+            <a href="#superficie" aria-label="Rolar para baixo"
+                class="absolute bottom-10 z-10 text-blue-700 dark:text-blue-400 animate-bounce">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </a>
+        </section>
+
+
+
+        <!-- SUPERFÍCIE -->
+        <section id="superficie" class="min-h-screen flex items-center justify-center p-8 bg-blue-300 dark:bg-blue-900 hiddens snap-center">
+            <div class="overlay"></div>
+
+            <div id="conteudo-superficie" class="max-w-4xl text-center text-gray-800 dark:text-gray-100">
+                <h2 class="text-5xl font-bold mb-4 tracking-tight">O Começo da Jornada</h2>
+                <p class="mb-8 text-xl leading-relaxed">Tudo começa aqui. O lixo que descartamos em terra encontra o
+                    mar.</p>
+
+                <!-- Placeholder Estilizado -->
+                <div class="relative cartoon-placeholder h-64 w-full">
+                    <span class="text-lg">(Infográfico: O Caminho do Lixo)</span>
+
+                    <!-- Botão 1 (INTOCADO) -->
+                    <div class="absolute" style="top: 100%; right: -20%;">
+                        <button type="button" class="info-icon" data-pop="popover-garrafa"
+                            aria-controls="popover-garrafa" aria-expanded="false">
+                            <svg class="w-6 h-6 pointer-events-none" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.002 6.002 0 0110.301-2.91 1.5 1.5 0 00-2.34-1.608 3.001 3.001 0 00-5.622 3.21A1.5 1.5 0 004.33 8.027zM10 12a1 1 0 001-1V9a1 1 0 10-2 0v2a1 1 0 001 1z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                        <div id="popover-garrafa" class="popover" role="dialog" aria-hidden="true">
+                            <strong class="font-bold">Garrafas PET</strong>
+                            <p class="text-sm mt-1">Toneladas de plástico chegam ao oceano todos os anos. Garrafas PET
+                                demoram centenas de anos para se decompor.</p>
+                        </div>
+                    </div>
+
+                    <!-- Botão 2 (INTOCADO) -->
+                    <div class="absolute" style="top: 60%; right: 110%;">
+                        <button type="button" class="info-icon" data-pop="popover-rios" aria-controls="popover-rios"
+                            aria-expanded="false">
+                            <span class="font-bold text-xl pointer-events-none">i</span>
+                        </button>
+                        <div id="popover-rios" class="popover" role="dialog" aria-hidden="true">
+                            <strong class="font-bold">O Caminho do Lixo</strong>
+                            <p class="text-sm mt-1">Cerca de 80% do lixo marinho vem de terra firme. Rios carregam
+                                grande parte disso.</p>
+                        </div>
+                    </div>
+                    <!-- Botão Modal 1 -->
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-superficie-1"
+                        style="position: absolute; top: 5%; right: 105%;">
+                        Lixo Visível
+                    </button>
+
+                    <!-- Botão Modal 2 -->
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-superficie-2"
+                        style="position: absolute; bottom: 30%; left: 105%;">
+                        Correntes Marinhas
+                    </button>
+
+                    <!-- Botão Modal 3 -->
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-superficie-3"
+                        style="position: absolute; bottom: -20%; right:-10%;">
+                        Manchas de Óleo
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ILHA DE PLÁSTICO -->
+        <section id="ilha-de-plastico"
+            class="min-h-screen flex items-center justify-center p-8 bg-blue-700 dark:bg-gray-900 text-white hiddens snap-center">
+            <!-- Importante para a imagem no fundo-->
+            <div class="overlay"></div>
+
+            <div id="conteudo-ilha-de-plastico" class="max-w-4xl text-center">
+                <h2 class="text-5xl font-bold mb-4 tracking-tight">A Grande Ilha de Plástico</h2>
+                <p class="mb-8 text-xl leading-relaxed">Correntes concentram lixo em giros enormes — ameaça para
+                    tartarugas e aves.</p>
+
+                <!-- Placeholder Estilizado -->
+                <div class="relative cartoon-placeholder h-64 w-full">
+                    <span class="text-lg">(Infográfico: A Grande Mancha)</span>
+
+                    <!-- Botão 4 (INTOCADO) -->
+                    <div class="absolute" style="top: 100%; right: -10%;">
+                        <button type="button" class="info-icon" data-pop="popover-tartaruga"
+                            aria-controls="popover-tartaruga" aria-expanded="false">
+                            <svg class="w-6 h-6 pointer-events-none" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M10 2a8 8 0 100 16 8 8 0 000-16zM7.707 6.293a1 1 0 011.414 0L10 7.586l.879-.879a1 1 0 111.414 1.414L11.414 9l.879.879a1 1 0 11-1.414 1.414L10 10.414l-.879.879a1 1 0 01-1.414-1.414L8.586 9 7.707 8.121a1 1 0 010-1.414z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div id="popover-tartaruga" class="popover" role="dialog" aria-hidden="true">
+                            <strong class="font-bold">Perigo para Animais</strong>
+                            <p class="text-sm mt-1">Tartarugas confundem sacolas com águas-vivas; ingestão causa
+                                bloqueios letais.</p>
+                        </div>
+                    </div>
+
+                    <!-- Botão Modal 1 (Página 3) -->
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-ilha-1"
+                        style="position: absolute; top: 15%; left: 105%;">
+                        O que é um "Giro"?
+                    </button>
+
+                    <!-- Botão Modal 2 (Página 3) -->
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-ilha-2"
+                        style="position: absolute; bottom: 150%; left: -30%;">
+                        Impacto nas Aves
+                    </button>
+
+                    <!-- Botão Modal 3 (Página 3) -->
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-ilha-3"
+                        style="position: absolute; bottom: -40%; right: 40%;">
+                        Fotodegradação
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!--Inicio da decida-->
+        <section id="descida-lixo"
+            class="min-h-screen flex items-center justify-center p-8 bg-blue-600 dark:bg-blue-950 text-white hiddens snap-center">
+            <!-- Importante para a imagem no fundo-->
+            <div class="overlay"></div>
+
+            <div id="conteudo-descida" class="max-w-4xl text-center">
+                <h2 class="text-5xl font-bold mb-4 tracking-tight">A Longa Queda</h2>
+                <p class="mb-8 text-xl leading-relaxed">O lixo que afunda. Plásticos e detritos iniciam sua jornada para
+                    o fundo, atravessando a zona de maior atividade da vida marinha.</p>
+
+                <!-- Placeholder Estilizado -->
+                <div class="relative cartoon-placeholder h-64 w-full">
+                    <span class="text-lg">(Infográfico: Lixo caindo, peixes investigando)</span>
+
+                    <!-- Popover 1 (INTOCADO) -->
+                    <div class="absolute" style="top: 110%; right: 100%;">
+                        <button type="button" class="info-icon" data-pop="popover-microplastico"
+                            aria-controls="popover-microplastico" aria-expanded="false">
+                            <span class="font-bold text-xl pointer-events-none">i</span>
+                        </button>
+                        <div id="popover-microplastico" class="popover" role="dialog" aria-hidden="true">
+                            <strong class="font-bold">Ingestão por Peixes</strong>
+                            <p class="text-sm mt-1">Peixes de meia-água confundem pequenos fragmentos de plástico com
+                                plâncton e os comem.</p>
+                        </div>
+                    </div>
+
+                    <!-- Popover 2 (INTOCADO) -->
+                    <div class="absolute" style="top: -100%; right: -10%;">
+                        <button type="button" class="info-icon" data-pop="popover-coluna-agua"
+                            aria-controls="popover-coluna-agua" aria-expanded="false">
+                            <svg class="w-6 h-6 pointer-events-none" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M10 2a8 8 0 100 16 8 8 0 000-16zM7.707 6.293a1 1 0 011.414 0L10 7.586l.879-.879a1 1 0 111.414 1.414L11.414 9l.879.879a1 1 0 11-1.414 1.414L10 10.414l-.879.879a1 1 0 01-1.414-1.414L8.586 9 7.707 8.121a1 1 0 010-1.414z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div id="popover-coluna-agua" class="popover" role="dialog" aria-hidden="true">
+                            <strong class="font-bold">A Coluna de Água</strong>
+                            <p class="text-sm mt-1">A poluição não está só na superfície ou no fundo. Ela satura toda a
+                                coluna de água.</p>
+                        </div>
+                    </div>
+
+                    <!-- === NOVOS BOTÕES DE MODAL (PÁGINA 3) === -->
+
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-descida-1"
+                        style="position: absolute; top: 110%; right: 10%;">
+                        O que é "Neve Marinha"?
+                    </button>
+
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-descida-2"
+                        style="position: absolute; bottom: 110%; left: 10%;">
+                        Poluentes Químicos
+                    </button>
+
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-descida-3"
+                        style="position: absolute; top: 50%; left: 105%;">
+                        Cadeia Alimentar
+                    </button>
+
+                </div>
+            </div>
+            <div class="bolhas-descida">
+                <span style="--i:12"></span>
+                <span style="--i:11"></span>
+                <span style="--i:18"></span>
+                <span style="--i:20"></span>
+                <span style="--i:15"></span>
+                <span style="--i:09"></span>
+                <span style="--i:23"></span>
+                <span style="--i:17"></span>
+                <span style="--i:18"></span>
+                <span style="--i:10"></span>
+                <span style="--i:16"></span>
+                <span style="--i:14"></span>
+                <span style="--i:19"></span>
+                <span style="--i:21"></span>
+                <span style="--i:22"></span>
+                <span style="--i:13"></span>
+                <span style="--i:19"></span>
+                <span style="--i:17"></span>
+                <span style="--i:14"></span>
+                <span style="--i:15"></span>
+                <span style="--i:21"></span>
+                <span style="--i:12"></span>
+                <span style="--i:11"></span>
+                <span style="--i:18"></span>
+                <span style="--i:20"></span>
+                <span style="--i:15"></span>
+                <span style="--i:09"></span>
+                <span style="--i:23"></span>
+                <span style="--i:17"></span>
+                <span style="--i:18"></span>
+                <span style="--i:10"></span>
+                <span style="--i:16"></span>
+                <span style="--i:14"></span>
+                <span style="--i:19"></span>
+                <span style="--i:21"></span>
+                <span style="--i:22"></span>
+                <span style="--i:13"></span>
+                <span style="--i:19"></span>
+                <span style="--i:17"></span>
+                <span style="--i:14"></span>
+                <span style="--i:15"></span>
+                <span style="--i:21"></span>
+            </div>
+        </section>
+        </section>
+
+        <!-- RECIFES -->
+        <section id="recifes"
+            class="min-h-screen flex items-center justify-center p-8 bg-blue-500 dark:bg-indigo-950 text-white hiddens snap-center">
+
+            <!-- Importante para a imagem no fundo-->
+            <div class="overlay"></div>
+
+            <div id="conteudo-recifes" class="max-w-4xl text-center">
+                <h2 class="text-5xl font-bold mb-4 tracking-tight">Os Recifes em Perigo</h2>
+                <p class="mb-8 text-xl leading-relaxed">Redes e sacolas sufocam corais; microplásticos entram na
+                    cadeia
+                    alimentar.</p>
+
+                <!-- Placeholder Estilizado -->
+                <div class="relative cartoon-placeholder h-64 w-full">
+                    <span class="text-lg">(Imagem: Coral Danificado)</span>
+
+                    <!-- Botão 3 (INTOCADO) -->
+                    <div class="absolute" style="top: 120%; right: -20%;">
+                        <button type="button" class="info-icon" data-pop="popover-corais" aria-controls="popover-corais"
+                            aria-expanded="false">
+                            <span class="font-bold text-xl pointer-events-none">i</span>
+                        </button>
+                        <div id="popover-corais" class="popover" role="dialog" aria-hidden="true">
+                            <strong class="font-bold">Sufocamento</strong>
+                            <p class="text-sm mt-1">Redes abandonadas e sacolas quebram e cobrem corais, reduzindo
+                                luz e
+                                oxigênio.</p>
+                        </div>
+                    </div>
+                    <!-- Botão Modal 1 (Página 2) -->
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-recifes-1"
+                        style="position: absolute; top: 10%; left: -30%;">
+                        Branqueamento de Corais
+                    </button>
+
+                    <!-- Botão Modal 2 (Página 2) -->
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-recifes-2"
+                        style="position: absolute; bottom: -20%; right: 15%;">
+                        Microplásticos nos Recifes
+                    </button>
+
+                    <!-- Botão Modal 3 (Página 2) -->
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-recifes-3"
+                        style="position: absolute; top: -80%; left: 80%;">
+                        Redes Fantasmas
+                    </button>
+                </div>
+            </div>
+
+            <!--Trabalhando na animação de bolhas no fundo-->
+            <div class="bolhas">
+                <span style="--i:12"></span>
+                <span style="--i:11"></span>
+                <span style="--i:18"></span>
+                <span style="--i:20"></span>
+                <span style="--i:15"></span>
+                <span style="--i:09"></span>
+                <span style="--i:23"></span>
+                <span style="--i:17"></span>
+                <span style="--i:18"></span>
+                <span style="--i:10"></span>
+                <span style="--i:16"></span>
+                <span style="--i:14"></span>
+                <span style="--i:19"></span>
+                <span style="--i:21"></span>
+                <span style="--i:22"></span>
+                <span style="--i:13"></span>
+                <span style="--i:19"></span>
+                <span style="--i:17"></span>
+                <span style="--i:14"></span>
+                <span style="--i:15"></span>
+                <span style="--i:21"></span>
+                <span style="--i:12"></span>
+                <span style="--i:11"></span>
+                <span style="--i:18"></span>
+                <span style="--i:20"></span>
+                <span style="--i:15"></span>
+                <span style="--i:09"></span>
+                <span style="--i:23"></span>
+                <span style="--i:17"></span>
+                <span style="--i:18"></span>
+                <span style="--i:10"></span>
+                <span style="--i:16"></span>
+                <span style="--i:14"></span>
+                <span style="--i:19"></span>
+                <span style="--i:21"></span>
+                <span style="--i:22"></span>
+                <span style="--i:13"></span>
+                <span style="--i:19"></span>
+                <span style="--i:17"></span>
+                <span style="--i:14"></span>
+                <span style="--i:15"></span>
+                <span style="--i:21"></span>
+            </div>
+        </section>
+
+
+        <!--Zona Crepuscular-->
+        <section id="zona-crepuscular" class="min-h-screen flex items-center justify-center p-8 text-white hiddens snap-center">
+            <!-- Importante para a imagem no fundo-->
+            <div class="overlay"></div>
+
+            <div id="conteudo-zona-crepuscular" class="max-w-6xl text-center">
+                <!-- Max-w-6xl para dar mais espaço aos painéis -->
+                <h2 class="text-5xl font-bold mb-4 tracking-tight">A Zona Crepuscular</h2>
+                <p class="mb-12 text-xl leading-relaxed">A luz desaparece (200m - 1000m). A pressão aumenta. O lixo
+                    continua a cair.</p>
+
+                <!-- Container para os "PAINÉIS" -->
+                <div class="flex flex-col md:flex-row gap-6 text-left">
+
+                    <!-- Painel 1 -->
+                    <div class="flex-1 p-6 bg-black/30 dark:bg-white/10 backdrop-blur-sm rounded-xl shadow-lg">
+                        <h3 class="text-2xl font-bold mb-3">Vida Bioluminescente</h3>
+                        <p class="mb-4 text-gray-200 dark:text-gray-300">Nesta escuridão, a maioria dos animais cria sua
+                            própria luz. O lixo que cai reflete essa luz, atraindo animais que tentam comê-lo, gastando
+                            energia preciosa.</p>
+                        <button type="button" class="modal-trigger-large" data-modal-id="modal-crepusculo-1">
+                            Migração Vertical
+                        </button>
+                    </div>
+
+                    <!-- Painel 2 -->
+                    <div class="flex-1 p-6 bg-black/30 dark:bg-white/10 backdrop-blur-sm rounded-xl shadow-lg">
+                        <h3 class="text-2xl font-bold mb-3">Novas Descobertas</h3>
+                        <p class="mb-4 text-gray-200 dark:text-gray-300">A ciência mal começou a explorar esta zona. A
+                            poluição nesta "creche" oceânica é uma ameaça direta à pesca global, pois larvas de atum
+                            crescem aqui.</p>
+                        <button type="button" class="modal-trigger-large" data-modal-id="modal-crepusculo-2">
+                            Impacto Econômico
+                        </button>
+                    </div>
+
+                    <!-- Painel 3 -->
+                    <div class="flex-1 p-6 bg-black/30 dark:bg-white/10 backdrop-blur-sm rounded-xl shadow-lg">
+                        <h3 class="text-2xl font-bold mb-3">Lixo "Invisível"</h3>
+                        <p class="mb-4 text-gray-200 dark:text-gray-300">Aqui, os microplásticos são indistinguíveis do
+                            plâncton. Animais filtradores, como o krill, os ingerem em massa, criando um "beco sem
+                            saída" de energia.</p>
+                        <button type="button" class="modal-trigger-large" data-modal-id="modal-crepusculo-3">
+                            Bomba de Carbono
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!--Trabalhando na animação de bolhas no fundo-->
+        <div class="bolhas-crepusculo">
+            <span style="--i:12"></span>
+            <span style="--i:11"></span>
+            <span style="--i:18"></span>
+            <span style="--i:20"></span>
+            <span style="--i:15"></span>
+            <span style="--i:09"></span>
+            <span style="--i:23"></span>
+            <span style="--i:17"></span>
+            <span style="--i:18"></span>
+            <span style="--i:10"></span>
+            <span style="--i:16"></span>
+            <span style="--i:14"></span>
+            <span style="--i:19"></span>
+            <span style="--i:21"></span>
+            <span style="--i:22"></span>
+            <span style="--i:13"></span>
+            <span style="--i:19"></span>
+            <span style="--i:17"></span>
+            <span style="--i:14"></span>
+            <span style="--i:15"></span>
+            <span style="--i:21"></span>
+            <span style="--i:12"></span>
+            <span style="--i:11"></span>
+            <span style="--i:18"></span>
+            <span style="--i:20"></span>
+            <span style="--i:15"></span>
+            <span style="--i:09"></span>
+            <span style="--i:23"></span>
+            <span style="--i:17"></span>
+            <span style="--i:18"></span>
+            <span style="--i:10"></span>
+            <span style="--i:16"></span>
+            <span style="--i:14"></span>
+            <span style="--i:19"></span>
+            <span style="--i:21"></span>
+            <span style="--i:22"></span>
+            <span style="--i:13"></span>
+            <span style="--i:19"></span>
+            <span style="--i:17"></span>
+            <span style="--i:14"></span>
+            <span style="--i:15"></span>
+            <span style="--i:21"></span>
+        </div>
+
+        <!-- ZONA ABISSAL -->
+        <section id="abismo" class="min-h-screen flex items-center justify-center p-8 bg-black text-white hiddens snap-center">
+            <!-- Importante para a imagem no fundo-->
+            <div class="overlay"></div>
+
+            <div id="conteudo-abismo" class="max-w-4xl text-center">
+                <h2 class="text-5xl font-bold mb-4 tracking-tight">O Abismo (1000m+)</h2>
+                <p class="mb-8 text-xl leading-relaxed">Escuridão total. Pressão esmagadora. Acreditávamos ser um
+                    deserto intocado, mas nosso lixo chegou primeiro.</p>
+
+                <!-- Placeholder Estilizado -->
+                <div class="relative cartoon-placeholder h-64 w-full">
+                    <span class="text-lg">(Imagem: Navio naufragado no fundo do mar)</span>
+
+                    <!-- Popover 1 (INTOCADO) -->
+                    <div class="absolute" style="top: -40%; right: 110%;">
+                        <button type="button" class="info-icon" data-pop="popover-pressao"
+                            aria-controls="popover-pressao" aria-expanded="false">
+                            <span class="font-bold text-xl pointer-events-none">i</span>
+                        </button>
+                        <div id="popover-pressao" class="popover" role="dialog" aria-hidden="true">
+                            <strong class="font-bold">Pressão Esmagadora</strong>
+                            <p class="text-sm mt-1">A mais de 1000m, a pressão é 100x maior que na superfície. O
+                                plástico pode levar milênios para se decompor aqui.</p>
+                        </div>
+                    </div>
+
+                    <!-- Popover 2 (INTOCADO) -->
+                    <div class="absolute" style="top: 100%; right: -15%;">
+                        <button type="button" class="info-icon" data-pop="popover-ecossistema-frio"
+                            aria-controls="popover-ecossistema-frio" aria-expanded="false">
+                            <svg class="w-6 h-6 pointer-events-none" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M10 2a8 8 0 100 16 8 8 0 000-16zM7.707 6.293a1 1 0 011.414 0L10 7.586l.879-.879a1 1 0 111.414 1.414L11.414 9l.879.879a1 1 0 11-1.414 1.414L10 10.414l-.879.879a1 1 0 01-1.414-1.414L8.586 9 7.707 8.121a1 1 0 010-1.414z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div id="popover-ecossistema-frio" class="popover" role="dialog" aria-hidden="true">
+                            <strong class="font-bold">Ecossistemas Frágeis</strong>
+                            <p class="text-sm mt-1">A vida aqui é lenta e frágil. Ecossistemas de corais de águas frias
+                                e fontes hidrotermais são únicos e podem ser destruídos para sempre.</p>
+                        </div>
+                    </div>
+
+                    <!-- === NOVOS BOTÕES DE MODAL (PÁGINA 6) === -->
+
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-abismo-1"
+                        style="position: absolute; top: -20%; right: 10%;">
+                        Naufrágios e Poluição
+                    </button>
+
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-abismo-2"
+                        style="position: absolute; bottom: -20%; left: -15%;">
+                        O "Cemitério" de Plástico
+                    </button>
+
+                    <button type="button" class="modal-trigger-large" data-modal-id="modal-abismo-3"
+                        style="position: absolute; top: -85%; left: 35%;">
+                        Mineração em Águas Profundas
+                    </button>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-900 dark:bg-black text-white p-12">
+        <div class="container mx-auto text-center">
+            <p class="font-bold text-lg mb-2">Jornada Oceânica</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500">&copy; 2025 - Gustavo, Miguel, João Victor - todos os
+                direitos reservados</p>
+            <div class="flex justify-center space-x-4 mt-6">
+                <a href="#"
+                    class="text-sm text-gray-400 hover:text-white dark:hover:text-white transition-colors duration-200">Fontes</a>
+                <a href="#"
+                    class="text-sm text-gray-400 hover:text-white dark:hover:text-white transition-colors duration-200">Créditos</a>
+            </div>
+        </div>
+    </footer>
+
+    <!--AREA DEDICADA AOS MODAIS- SUBSTITUIR AQUI SANCHEZ
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+
+    <!--modais da primeira página-->
+    <div id="modal-superficie-1" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <!-- Use as classes de texto do Tailwind que você já usa (dark:text-gray-100, etc) -->
+            <h2 class="text-2xl font-bold mb-4">Lixo visível</h2>
+            <p class="mb-4">O lixo visível é a forma mais imediata de poluição marinha, e justamente por ser tão evidente, torna-se um retrato fiel do descaso ambiental. Ele aparece nas praias, flutuando no mar, acumulado em costões e presos em vegetações costeiras como manguezais. A maioria desses resíduos vem de atividades humanas: embalagens jogadas na rua, itens esquecidos por turistas, materiais de pesca abandonados e até mesmo objetos carregados por rios após chuvas fortes.
+                            O impacto ambiental vai muito além da aparência de sujeira. Animais como tartarugas confundem sacolas plásticas com águas-vivas; aves engolem tampinhas, anéis plásticos e pedaços rígidos; peixes consomem microfragmentos que se acumulam em seus organismos. Emaranhamentos são comuns: golfinhos, tartarugas, aves e até tubarões ficam presos em linhas e cordas, muitas vezes morrendo lentamente. Além disso, esse lixo altera a dinâmica costeira: acumula bactérias, atrai animais oportunistas e pode até liberar substâncias químicas à medida que se degrada.
+                            Embora seja o tipo de poluição mais palpável, ele representa apenas uma pequena parte de todo o lixo marinho: estimativas indicam que mais de 70% afunda e permanece no fundo, invisível aos nossos olhos, mas ainda devastador.</p>
+        </div>
+    </div>
+
+    <!-- Modal 2: Correntes Marinhas -->
+    <div id="modal-superficie-2" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">O Papel das Correntes Marinhas</h2>
+            <p class="mb-4">O lixo não fica parado. As correntes oceânicas, conhecidas como giros, agem como gigantescos
+                redemoinhos. Elas capturam o plástico flutuante e o concentram em enormes "ilhas de lixo", como a Grande
+                Mancha de Lixo do Pacífico.</p>
+            <p>Essas manchas não são ilhas sólidas, mas sim uma "sopa" difusa de detritos que se estende por milhares de
+                quilômetros quadrados, contaminando vastas áreas do oceano.</p>
+        </div>
+    </div>
+
+    <!-- Modal 3: Manchas de Óleo -->
+    <div id="modal-superficie-3" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Derramamentos e Manchas de Óleo</h2>
+            <p class="mb-4">O petróleo derramado nos mares é um contaminante extremamente perigoso devido à sua toxicidade e persistência. Quando ocorre um derramamento, o óleo rapidamente forma uma película na superfície, bloqueando a passagem de luz e reduzindo a oxigenação da água. Essa camada pode viajar longas distâncias empurrada por ventos e correntes, atingindo diversas regiões e ecossistemas vulneráveis.
+                            Ao aderir às penas das aves, o petróleo impede o isolamento térmico e sua capacidade de voar. Em mamíferos marinhos, provoca irritações e danos respiratórios. Muitas espécies ingerem o óleo acidentalmente enquanto tentam se limpar ou ao capturar presas contaminadas, levando a intoxicações graves.
+                            Nos ecossistemas costeiros, os impactos podem durar décadas. Manguezais, por exemplo, têm raízes pneumatóforas que respiram; quando ficam cobertas por petróleo, essas plantas morrem lentamente. O mesmo vale para corais, que podem sofrer mortalidade em massa após contato com hidrocarbonetos.
+                            A economia também sofre: pescadores ficam impossibilitados de trabalhar, a balneabilidade é comprometida e a biodiversidade é drasticamente reduzida.
+                            </p>
+        </div>
+    </div>
+
+    <!--MODAIS DA SEGUNDA PÁGINA-->
+    <div id="modal-recifes-1" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <!-- Adapte as classes de cor (dark:...) para combinar com sua página -->
+            <h2 class="text-2xl font-bold mb-4">Branqueamento de Corais</h2>
+            <p class="mb-4">Texto denso sobre branqueamento. Embora a poluição plástica seja um estressor físico, a
+                poluição química e o aquecimento da água (também uma forma de poluição) são os principais motores do
+                branqueamento.</p>
+            <p>Quando a água fica muito quente ou poluída, os corais expelem as algas (zooxantelas) que vivem em seus
+                tecidos, que lhes dão cor e alimento. Sem elas, o coral fica branco (branqueado) e vulnerável a doenças
+                e morte.</p>
+        </div>
+    </div>
+
+    <!-- Modal 2: Microplásticos -->
+    <div id="modal-recifes-2" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Microplásticos e a Cadeia Alimentar</h2>
+            <p class="mb-4">Texto denso sobre microplásticos. Os próprios corais são animais filtradores e ingerem
+                ativamente microplásticos da coluna de água, confundindo-os com plâncton. Isso causa bloqueios
+                digestivos, estresse e redução da capacidade de alimentação.</p>
+            <p>Além disso, peixes de recife e pequenos invertebrados comem esses plásticos, introduzindo toxinas na
+                cadeia alimentar que eventualmente chegam a predadores maiores e aos seres humanos.</p>
+        </div>
+    </div>
+
+    <!-- Modal 3: Redes Fantasmas -->
+    <div id="modal-recifes-3" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">O Perigo das "Redes Fantasmas"</h2>
+            <p class="mb-4">Texto denso sobre redes de pesca. Redes, linhas e armadilhas perdidas ou descartadas são
+                chamadas de "equipamento de pesca fantasma". Elas são uma das formas mais letais de poluição plástica.
+            </p>
+            <p>Nos recifes, elas se enroscam nos corais, quebrando suas estruturas delicadas. Elas também continuam a
+                "pescar" sozinhas por décadas, prendendo peixes, tartarugas, golfinhos e outros animais marinhos, que
+                morrem de forma lenta e desnecessária.</p>
+        </div>
+    </div>
+
+    <!--MODAIS DA TERCEIRA PÁGINA-->
+    <div id="modal-ilha-1" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">O que é um Giro Oceânico?</h2>
+            <p class="mb-4">Texto denso sobre os giros. Um giro oceânico é um grande sistema de correntes marinhas
+                rotativas. Existem cinco giros subtropicais principais no mundo (Pacífico Norte, Pacífico Sul, Atlântico
+                Norte, Atlântico Sul e Oceano Índico).</p>
+            <p>Eles agem como "ralos" gigantes, mas em vez de sugar a água para baixo, eles concentram qualquer coisa
+                que esteja flutuando em seu centro. É por isso que o lixo plástico se acumula nessas áreas, formando as
+                "Grandes Manchas de Lixo".</p>
+        </div>
+    </div>
+
+    <!-- Modal 2: Impacto nas Aves -->
+    <div id="modal-ilha-2" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">A Tragédia das Aves Marinhas</h2>
+            <p class="mb-4">Texto denso sobre aves. Aves como o Albatroz-de-Laysan voam milhares de quilômetros sobre o
+                oceano para encontrar comida para seus filhotes. Elas sobrevoam as manchas de lixo e pegam pedaços de
+                plástico coloridos (como tampas e isqueiros), confundindo-os com lulas ou ovos de peixe.</p>
+            <p>Elas então alimentam seus filhotes com esse plástico. O resultado é trágico: os filhotes morrem de fome
+                ou por perfurações internas, com o estômago cheio de plástico, enquanto seus pais continuam a trazer
+                mais lixo.</p>
+        </div>
+    </div>
+
+    <!-- Modal 3: Fotodegradação -->
+    <div id="modal-ilha-3" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Fotodegradação: O Plástico Não "Some"</h2>
+            <p class="mb-4">Texto denso sobre fotodegradação. O plástico nas ilhas de lixo não é biodegradável. Em vez
+                disso, ele sofre fotodegradação: a luz do sol o torna quebradiço, e as ondas o quebram em pedaços cada
+                vez menores.</p>
+            <p>Isso não faz o plástico desaparecer; ele apenas se transforma em microplásticos. Isso torna a "sopa de
+                plástico" ainda mais perigosa, pois esses pequenos fragmentos são facilmente ingeridos por animais
+                filtradores e peixes, contaminando toda a cadeia alimentar desde a base.</p>
+        </div>
+    </div>
+
+    <!--modais da página 3(decida para o oceano)-->
+
+    <div id="modal-descida-1" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900">A "Neve Marinha" Tóxica</h2>
+            <p class="mb-4 text-gray-700">Texto denso sobre a "neve marinha". Em condições normais, a "neve marinha" é
+                uma chuva de detritos orgânicos (restos de plâncton, fezes) que cai da superfície e alimenta a vida nas
+                profundezas.</p>
+            <p class="text-gray-700">Com a poluição, os microplásticos se agregam a essa neve, tornando-a tóxica. O
+                plástico "pega carona" nessa chuva e é transportado rapidamente para o fundo do oceano, envenenando os
+                ecossistemas abissais antes mesmo de se degradar.</p>
+        </div>
+    </div>
+
+    <!-- Modal 2: Poluentes Químicos -->
+    <div id="modal-descida-2" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900">Poluentes Químicos Dissolvidos</h2>
+            <p class="mb-4 text-gray-700">Texto denso sobre poluentes químicos. O plástico age como uma esponja para
+                outros poluentes na água, como pesticidas (DDT) e PCBs (usados em eletrônicos antigos). Eles grudam na
+                superfície do plástico.</p>
+            <p class="text-gray-700">Quando um peixe come esse plástico, ele não está ingerindo apenas o plástico, mas
+                uma dose concentrada desses venenos, que se acumulam em sua gordura e são passados adiante na cadeia
+                alimentar.</p>
+        </div>
+    </div>
+
+    <!-- Modal 3: Cadeia Alimentar de Meia-Água -->
+    <div id="modal-descida-3" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900">Impacto na Cadeia Alimentar</h2>
+            <p class="mb-4 text-gray-700">Texto denso sobre a cadeia alimentar. A zona de meia-água (mesopelágica) é
+                crucial. Animais como lulas, peixes-lanterna e krill vivem ali. Eles comem o plástico que afunda e, à
+                noite, muitos deles sobem à superfície para se alimentar (e fugir de predadores), onde são comidos por
+                atuns, golfinhos e aves marinhas.</p>
+            <p class="text-gray-700">Dessa forma, o plástico que afundou é rapidamente "bombeado" de volta para a cadeia
+                alimentar da superfície, espalhando a contaminação.</p>
+        </div>
+    </div>
+
+    <!--modais da pagina 4(decida mais profunda)-->
+
+    <!-- Modal 1: Migração Vertical -->
+    <div id="modal-crepusculo-1" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900">A Migração Vertical Diária</h2>
+            <p class="mb-4 text-gray-700">Texto denso sobre a migração. Todos os dias, ao pôr do sol, trilhões de
+                animais da zona crepuscular sobem centenas de metros para se alimentar na superfície, na maior migração
+                em massa do planeta. Eles comem plâncton (e microplásticos) e, antes do amanhecer, descem de volta para
+                a escuridão.</p>
+            <p class="text-gray-700">Isso significa que eles estão ativamente comendo o plástico da superfície e o
+                transportando rapidamente para as profundezas, muito mais rápido do que ele afundaria sozinho.</p>
+        </div>
+    </div>
+
+    <!-- Modal 2: Impacto Econômico -->
+    <div id="modal-crepusculo-2" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900">Impacto Econômico e na Pesca</h2>
+            <p class="mb-4 text-gray-700">Texto denso sobre o impacto econômico. A zona crepuscular (mesopelágica)
+                contém uma biomassa estimada de 10 bilhões de toneladas de peixes - mais do que todo o resto do oceano
+                combinado. Embora ainda não os pesquemos em grande escala, eles são a principal fonte de alimento para
+                peixes que *nós* comemos, como atum e salmão.</p>
+            <p class="text-gray-700">Contaminar a base da cadeia alimentar com plástico e toxinas é uma ameaça direta à
+                segurança alimentar e à economia da pesca em todo o mundo.</p>
+        </div>
+    </div>
+
+    <!-- Modal 3: Bomba de Carbono -->
+    <div id="modal-crepusculo-3" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-gray-900">Interferindo na Bomba de Carbono</h2>
+            <p class="mb-4 text-gray-700">Texto denso sobre a bomba de carbono. A migração vertical não transporta só
+                comida; ela é uma "bomba de carbono" vital. Os animais comem carbono (plâncton) na superfície e o
+                "excretam" nas profundezas, onde ele fica armazenado por séculos. Isso remove CO2 da atmosfera e regula
+                o clima.</p>
+            <p class="text-gray-700">O plástico interfere nesse processo. Animais que comem plástico ficam "doentes",
+                comem menos e transportam menos carbono. O plástico também pode alterar a densidade de suas fezes,
+                fazendo-as afundar mais devagar, o que prejudica todo o ciclo de carbono do planeta.</p>
+        </div>
+    </div>
+
+
+    <!-- SCRIPTS — IMPLEMENTAÇÃO DOS POPOVERS-->
+     <script src="scripts.js"></script>
+    <script>
+        (function () {
+            // Helper: fecha todos os popovers
+            function closeAllPopovers() {
+                document.querySelectorAll('.popover.show').forEach(pop => {
+                    pop.classList.remove('show');
+                    pop.setAttribute('aria-hidden', 'true');
+                });
+                document.querySelectorAll('.info-icon[aria-expanded="true"]').forEach(btn => {
+                    btn.setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            // Ajusta a posição horizontal do popover se estiver saindo da viewport
+            function clampPopoverIntoView(btn, pop) {
+                // Reset inline left so getBoundingClientRect está correto com padrão CSS (left:50%)
+                pop.style.left = '';
+                pop.style.right = '';
+                pop.style.transform = ''; // deixamos o CSS original aplicar transform
+
+                const rectPop = pop.getBoundingClientRect();
+                const rectBtn = btn.getBoundingClientRect();
+                const vw = document.documentElement.clientWidth;
+                const margin = 8;
+
+                // Se estiver invadindo a esquerda
+                if (rectPop.left < margin) {
+                    const overflow = margin - rectPop.left;
+                    // move pop um pouco para a direita
+                    pop.style.left = `calc(50% + ${overflow}px)`;
+                } else if (rectPop.right > vw - margin) {
+                    const overflow = rectPop.right - (vw - margin);
+                    pop.style.left = `calc(50% - ${overflow}px)`;
+                } else {
+                    // nada: manter centralizado
+                    pop.style.left = '50%';
+                }
+            }
+
+            // Toggle simples: abre se fechado, fecha se aberto (apenas 1 aberto de cada vez)
+            function togglePopover(btn) {
+                if (!btn) return;
+                const popId = btn.getAttribute('data-pop');
+                if (!popId) return;
+                const pop = document.getElementById(popId);
+                if (!pop) return;
+
+                const isShown = pop.classList.contains('show');
+
+                // Fechar tudo primeiro (garante 1 aberto)
+                closeAllPopovers();
+
+                if (!isShown) {
+                    // Abre o popover
+                    pop.classList.add('show');
+                    pop.setAttribute('aria-hidden', 'false');
+                    btn.setAttribute('aria-expanded', 'true');
+
+                    // Ajusta posicionamento para não vazar da viewport
+                    clampPopoverIntoView(btn, pop);
+                }
+            }
+
+            // Inicialização: associa listeners a todos os botões com data-pop
+            function init() {
+                const buttons = Array.from(document.querySelectorAll('.info-icon[data-pop]'));
+
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        togglePopover(btn);
+                    });
+
+                    btn.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            togglePopover(btn);
+                        }
+                    });
+
+                    if (!btn.hasAttribute('aria-expanded')) btn.setAttribute('aria-expanded', 'false');
+                });
+
+                document.addEventListener('click', function () {
+                    closeAllPopovers();
+                });
+
+                document.querySelectorAll('.popover').forEach(pop => {
+                    pop.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                    });
+                });
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' || e.key === 'Esc') {
+                        closeAllPopovers();
+                    }
+                });
+
+                window.addEventListener('resize', function () {
+                    document.querySelectorAll('.popover.show').forEach(pop => {
+                        const id = pop.id;
+                        const btn = document.querySelector(`[data-pop="${id}"]`);
+                        if (btn) clampPopoverIntoView(btn, pop);
+                    });
+                });
+
+                window.addEventListener('scroll', function () {
+                    document.querySelectorAll('.popover.show').forEach(pop => {
+                        const id = pop.id;
+                        const btn = document.querySelector(`[data-pop="${id}"]`);
+                        if (btn) clampPopoverIntoView(btn, pop);
+                    });
+                }, { passive: true });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+
+    <!-- NOVO SCRIPT - Lógica do Tema Escuro -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // 1. Encontra todos os NOVOS botões (triggers)
+            const modalTriggers = document.querySelectorAll('.modal-trigger-large');
+
+            // 2. Encontra todos os botões de fechar "X"
+            const closeButtons = document.querySelectorAll('.modal-close');
+
+            // 3. Encontra todos os fundos (overlays)
+            const overlays = document.querySelectorAll('.modal-overlay');
+
+            // 4. Adiciona o clique para ABRIR o modal
+            modalTriggers.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Pega o ID do modal do atributo "data-modal-id"
+                    const modalId = button.dataset.modalId;
+                    const modal = document.getElementById(modalId);
+
+                    if (modal) {
+                        modal.classList.add('active');
+                    }
+                });
+            });
+
+            // 5. Função para fechar o modal
+            const closeModal = (modal) => {
+                if (modal) {
+                    modal.classList.remove('active');
+                }
+            };
+
+            // 6. Adiciona o clique para FECHAR (no botão "X")
+            closeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Encontra o "pai" (o overlay) e fecha ele
+                    const modal = button.closest('.modal-overlay');
+                    closeModal(modal);
+                });
+            });
+
+            // 7. Adiciona o clique para FECHAR (clicando fora, no overlay)
+            overlays.forEach(overlay => {
+                overlay.addEventListener('click', (event) => {
+                    // Se o clique foi EXATAMENTE no fundo (e não na caixa de conteúdo)
+                    if (event.target === overlay) {
+                        closeModal(overlay);
+                    }
+                });
+            });
+
+            // 8. Opcional: Fechar com a tecla "Escape"
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    // Encontra o modal que estiver ativo e fecha
+                    const activeModal = document.querySelector('.modal-overlay.active');
+                    closeModal(activeModal);
+                }
+            });
+        });
+
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarMenu = document.getElementById('sidebar-menu');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const sidebarArrow = document.getElementById('sidebar-arrow');
+
+        const openSidebar = () => {
+            sidebarMenu.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+            // Move o botão junto com a sidebar
+            // w-72 (da sidebar) = 18rem = 288px
+            sidebarToggle.style.transform = 'translateY(-50%) translateX(288px)';
+            sidebarArrow.classList.add('rotate-180'); // Gira a seta
+        };
+
+        const closeSidebar = () => {
+            sidebarMenu.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+            // Move o botão de volta para a borda
+            sidebarToggle.style.transform = 'translateY(-50%) translateX(0)';
+            sidebarArrow.classList.remove('rotate-180'); // Volta a seta
+        };
+
+        // Abrir/Fechar com o botão da seta
+        sidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sidebarMenu.classList.contains('-translate-x-full')) {
+                openSidebar();
+            } else {
+                closeSidebar();
+            }
+        });
+
+        // Fechar clicando no overlay
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Fechar clicando em um link (para navegar)
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', closeSidebar);
+        });
+
+
+        // --- 5. LÓGICA GLOBAL (Fechar com 'Escape') ---
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                // Fecha o modal que estiver ativo
+                const activeModal = document.querySelector('.modal-overlay.active');
+                closeModal(activeModal);
+
+                // Fecha a sidebar se estiver aberta
+                if (!sidebarMenu.classList.contains('-translate-x-full')) {
+                    closeSidebar();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

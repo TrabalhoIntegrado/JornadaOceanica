@@ -1,0 +1,684 @@
+/*Animações sumir e aparecer*/
+.hiddens {
+    opacity: 0;
+    filter: blur(20px);
+    transition: all 2s;
+    transform: translateX(-100%);
+}
+
+.show {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateX(0);
+    transition: all 2s;
+}
+
+/*Para a animação dos peixes*/
+.peixe {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    pointer-events: none;
+    /* Para não bloquear cliques */
+}
+
+.peixe div {
+    position: absolute;
+    display: block;
+}
+
+/*Tamanhos dos peixes*/
+.peixe div.peixe-tamanho-50 {
+    width: 50px;
+    height: 50px;
+}
+
+.peixe div.peixe-tamanho-75 {
+    width: 75px;
+    height: 75px;
+}
+
+/* Faz a imagem preencher a div e respeitar o limite de tamanho do DIV */
+.peixe div img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+}
+
+/* Configurações de Posição e Animação (Mantidas do seu código) */
+
+@keyframes fall {
+    0% {
+        opacity: 1;
+        top: -10%;
+        transform: translateX(20px) rotate(0deg);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translateX(-5px) rotate(45deg);
+    }
+
+    40% {
+        transform: translateX(-5px) rotate(90deg);
+    }
+
+    60% {
+        transform: translateX(-5px) rotate(135deg);
+    }
+
+    80% {
+        transform: translateX(-5px) rotate(180deg);
+    }
+
+    100% {
+        top: 110%;
+        transform: translateX(-5px) rotate(225deg);
+        
+    }
+}
+
+.peixe div:nth-child(1) {
+    left: 20%;
+    animation: fall 15s linear infinite;
+    animation-delay: -2s;
+}
+
+.peixe div:nth-child(2) {
+    left: 70%;
+    animation: fall 15s linear infinite;
+    animation-delay: -4s;
+}
+
+.peixe div:nth-child(3) {
+    left: 10%;
+    animation: fall 20s linear infinite;
+    animation-delay: -7s;
+}
+
+.peixe div:nth-child(4) {
+    left: 50%;
+    animation: fall 18s linear infinite;
+    animation-delay: -5s;
+}
+
+.peixe div:nth-child(5) {
+    left: 85%;
+    animation: fall 14s linear infinite;
+    animation-delay: -5s;
+}
+
+.peixe div:nth-child(6) {
+    left: 15%;
+    animation: fall 16s linear infinite;
+    animation-delay: -10s;
+}
+
+.peixe div:nth-child(7) {
+    left: 90%;
+    animation: fall 15s linear infinite;
+    animation-delay: -4s;
+}
+
+
+.peixe1 {
+    transform: rotateX(180deg);
+}
+
+
+
+/* SEÇÃO SUPERFÍCIE */
+#superficie {
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* IMAGEM DE FUNDO */
+#superficie::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("./imagens/Praia\ Poluida.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    z-index: 0;
+}
+
+/* OVERLAY */
+#superficie .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1;
+}
+
+/* TEXTO */
+#superficie #conteudo-superficie {
+    position: relative;
+    z-index: 2;
+    color: white;
+    padding: 100px 30px;
+    text-align: center;
+}
+
+/* SEÇÃO SUPERFÍCIE */
+#recifes {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* IMAGEM DE FUNDO */
+#recifes::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("./imagens/corais\ esbranquicados.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    z-index: 0;
+}
+
+/* OVERLAY */
+#recifes .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1;
+}
+
+/*Efeito de bolhas*/
+.bolhas {
+    position: absolute;
+    /* Essencial para que as bolhas flutuem em toda a seção */
+    display: flex;
+    z-index: 2;
+    /* Fica entre o overlay (1) e o conteúdo (3) */
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    /* Para não bloquear cliques no conteúdo */
+}
+
+.bolhas span {
+    position: absolute;
+    /* Essencial para que cada bolha se mova independentemente */
+    display: block;
+    width: 30px;
+    height: 30px;
+    background: #26a4d6;
+    /* Amarelo Neon */
+    margin: 0 4px;
+    box-shadow: 0 0 0 10px #26a4d644,
+        0 0 50px #26a4d6,
+        0 0 100px #26a4d6;
+    border-radius: 50%;
+
+    /* Usando --i para variar a velocidade e a flutuação horizontal */
+    animation:
+        animar calc(15s + var(--i) * 0.5s) linear infinite,
+        flutuar calc(3s + var(--i) * 0.1s) ease-in-out infinite alternate;
+
+    animation-delay: calc(var(--i) * 0.5s);
+    /* Atraso para iniciar a animação */
+
+    /* Posicionamento horizontal baseado em --i (espalhando as bolhas) */
+    left: calc(var(--i) * 6.5% - 53%);
+    bottom: -50px;
+    /* Começa ligeiramente fora da tela */
+}
+
+/* Animação de subida e desaparecimento */
+@keyframes animar {
+    0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-100vh) scale(1.5);
+        opacity: 0;
+        /* Bolha desaparece ao chegar ao topo */
+    }
+}
+
+/* Animação de flutuação horizontal para realismo */
+@keyframes flutuar {
+    0% {
+        margin-left: 0px;
+    }
+
+    100% {
+        margin-left: 50px;
+    }
+}
+
+.bolhas span:nth-of-type(even) {
+    background: #2dc3ff;
+    /* Azul Claro */
+    box-shadow: 0 0 0 10px #2dc3ff44,
+        0 0 50px #2dc3ff,
+        0 0 100px #2dc3ff;
+    /* Ajuste de posição para bolhas pares */
+    left: calc(var(--i) * 4% + 2%);
+}
+
+/* TEXTO */
+#recifes #conteudo-recifes {
+    position: relative;
+    z-index: 2;
+    color: white;
+    padding: 100px 30px;
+    text-align: center;
+}
+
+#ilha-de-plastico {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* IMAGEM DE FUNDO */
+#ilha-de-plastico::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("./imagens/Ilha\ invisivel.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    z-index: 0;
+}
+
+/* OVERLAY */
+#ilha-de-plastico .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1;
+}
+
+/* TEXTO */
+#ilha-de-plastico #conteudo-ilha-de-plastico {
+    position: relative;
+    z-index: 2;
+    color: white;
+    padding: 100px 30px;
+    text-align: center;
+}
+
+#descida-lixo {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+
+/* IMAGEM DE FUNDO */
+#descida-lixo::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("./imagens/sacolas\ caindo\ no\ mar.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    z-index: 0;
+}
+
+/* OVERLAY */
+#descida-lixo .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1;
+}
+
+/*Efeito de Bolhas*/
+.bolhas-descida {
+    position: absolute;
+    /* Essencial para que as bolhas flutuem em toda a seção */
+    display: flex;
+    z-index: 2;
+    /* Fica entre o overlay (1) e o conteúdo (3) */
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    /* Para não bloquear cliques no conteúdo */
+}
+
+.bolhas-descida span {
+    position: absolute;
+    /* Essencial para que cada bolha se mova independentemente */
+    display: block;
+    width: 30px;
+    height: 30px;
+    background: #26a6d8;
+    margin: 0 4px;
+    box-shadow: 0 0 0 10px #1894c544,
+        0 0 50px #1894c5,
+        0 0 100px #1894c5;
+    border-radius: 50%;
+
+    /* Usando --i para variar a velocidade e a flutuação horizontal */
+    animation:
+        animar calc(15s + var(--i) * 0.5s) linear infinite,
+        flutuar calc(3s + var(--i) * 0.1s) ease-in-out infinite alternate;
+
+    animation-delay: calc(var(--i) * 0.5s);
+    /* Atraso para iniciar a animação */
+
+    /* Posicionamento horizontal baseado em --i (espalhando as bolhas) */
+    left: calc(var(--i) * 6.5% - 53%);
+    bottom: -50px;
+    /* Começa ligeiramente fora da tela */
+}
+
+/* Animação de subida e desaparecimento */
+@keyframes animar {
+    0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-100vh) scale(1.5);
+        opacity: 0;
+        /* Bolha desaparece ao chegar ao topo */
+    }
+}
+
+/* Animação de flutuação horizontal para realismo */
+@keyframes flutuar {
+    0% {
+        margin-left: 0px;
+    }
+
+    100% {
+        margin-left: 50px;
+    }
+}
+
+.bolhas-crepusculo span:nth-of-type(even) {
+    background: #196f91;
+    /* Azul Claro */
+    box-shadow: 0 0 0 10px #2dc3ff44,
+        0 0 50px #2dc3ff,
+        0 0 100px #2dc3ff;
+    /* Ajuste de posição para bolhas pares */
+    left: calc(var(--i) * 4% + 2%);
+}
+
+
+/* TEXTO */
+#descida-lixo #conteudo-descida {
+    position: relative;
+    z-index: 2;
+    color: white;
+    padding: 100px 30px;
+    text-align: center;
+}
+
+/*ZONA CREPUSCULAR*/
+#zona-crepuscular {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* IMAGEM DE FUNDO */
+#zona-crepuscular::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("./imagens/Zona\ obscura.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    z-index: 0;
+}
+
+/* OVERLAY */
+#zona-crepuscular .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1;
+}
+
+/*Efeito de bolhas*/
+.bolhas-crepusculo {
+    position: absolute;
+    /* Essencial para que as bolhas flutuem em toda a seção */
+    display: flex;
+    z-index: 2;
+    /* Fica entre o overlay (1) e o conteúdo (3) */
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    /* Para não bloquear cliques no conteúdo */
+}
+
+.bolhas-crepusculo span {
+    position: absolute;
+    /* Essencial para que cada bolha se mova independentemente */
+    display: block;
+    width: 30px;
+    height: 30px;
+    background: #166585;
+    margin: 0 4px;
+    box-shadow: 0 0 0 10px #12749b44,
+        0 0 50px #0b4b64,
+        0 0 100px #12749b;
+    border-radius: 50%;
+
+    /* Usando --i para variar a velocidade e a flutuação horizontal */
+    animation:
+        animar calc(15s + var(--i) * 0.5s) linear infinite,
+        flutuar calc(3s + var(--i) * 0.1s) ease-in-out infinite alternate;
+
+    animation-delay: calc(var(--i) * 0.5s);
+    /* Atraso para iniciar a animação */
+
+    /* Posicionamento horizontal baseado em --i (espalhando as bolhas) */
+    left: calc(var(--i) * 6.5% - 53%);
+    bottom: -50px;
+    /* Começa ligeiramente fora da tela */
+}
+
+/* Animação de subida e desaparecimento */
+@keyframes animar {
+    0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-100vh) scale(1.5);
+        opacity: 0;
+        /* Bolha desaparece ao chegar ao topo */
+    }
+}
+
+/* Animação de flutuação horizontal para realismo */
+@keyframes flutuar {
+    0% {
+        margin-left: 0px;
+    }
+
+    100% {
+        margin-left: 50px;
+    }
+}
+
+.bolhas-crepusculo span:nth-of-type(even) {
+    background: #196f91;
+    /* Azul Claro */
+    box-shadow: 0 0 0 10px #2dc3ff44,
+        0 0 50px #2dc3ff,
+        0 0 100px #2dc3ff;
+    /* Ajuste de posição para bolhas pares */
+    left: calc(var(--i) * 4% + 2%);
+}
+
+/* TEXTO */
+#zona-crepuscular #conteudo-zona-crepuscular {
+    position: relative;
+    z-index: 2;
+    color: white;
+    padding: 100px 30px;
+    text-align: center;
+}
+
+/*ZONA ABISSAL*/
+#abismo {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* IMAGEM DE FUNDO */
+#abismo::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("./imagens/Fundo\ com\ navio.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll;
+    z-index: 0;
+}
+
+/* OVERLAY */
+#abismo .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1;
+}
+
+/* TEXTO */
+#abismo #conteudo-abismo {
+    position: relative;
+    z-index: 2;
+    color: white;
+    padding: 100px 30px;
+    text-align: center;
+}
+
+/* Estilo Cartoon para a Div do Logo */
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+    /* Espaçamento acima da imagem */
+    padding: 0.5rem;
+    /* Padding interno para "respirar" */
+    background: linear-gradient(135deg, rgba(135, 206, 235, 0.3) 0%, rgba(245, 158, 11, 0.2) 100%);
+    /* Gradiente sutil oceânico com acento dourado */
+    border-radius: 1.5rem;
+    /* Bordas arredondadas cartoon */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15), inset 0 2px 4px rgba(255, 255, 255, 0.1);
+    /* Sombra leve com efeito interno */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Transição suave para hover */
+}
+
+.logo-container:hover {
+    transform: scale(1.05);
+    /* Efeito de zoom cartoon ao passar o mouse */
+    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+    /* Sombra mais intensa com acento dourado */
+}
+
+/* Estilo para a Imagem do Logo */
+.logo-image {
+    width: 4rem;
+    /* Largura ajustável (64px) */
+    height: 4rem;
+    /* Altura ajustável */
+    border-radius: 50%;
+    /* Circular para cartoon */
+    object-fit: cover;
+    /* Mantém proporção */
+    border: 3px solid rgba(245, 158, 11, 0.6);
+    /* Borda dourada sutil */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    /* Sombra leve */
+    transition: transform 0.3s ease;
+    /* Transição para hover */
+}
+
+.logo-image:hover {
+    transform: rotate(5deg) scale(1.1);
+    /* Rotação e zoom leve para efeito divertido */
+}
+
+/* Responsividade para Mobile */
+@media (max-width: 768px) {
+    .logo-container {
+        margin-top: 0.5rem;
+        /* Menor espaçamento em telas pequenas */
+    }
+
+    .logo-image {
+        width: 3rem;
+        /* Menor tamanho em mobile */
+        height: 3rem;
+    }
+}
